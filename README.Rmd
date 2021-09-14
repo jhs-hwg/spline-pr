@@ -13,10 +13,6 @@ knitr::opts_chunk$set(
 
 # spline-pr
 
-<!-- id: a0217837100 -->
-<!-- amanda: a0217837101 -->
-<!-- group: 3372 -->
-
 The goal of spline-pr is to fit poisson regression models with generalized estimating equations (i.e., robust variance estimators for prevalence ratios) that include spline terms. The code in this repo also generates plots that show the estimated spline curve over a domain specified by the user.
 
 # Example

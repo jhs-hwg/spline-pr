@@ -1,6 +1,6 @@
 
 
-#' Title
+#' Create bins for histogram
 #'
 #' @param x
 #' @param y
@@ -85,7 +85,7 @@ bin_segments <- function(x,
 
 }
 
-#' Title
+#' Get index of pattern in coefficient names
 #'
 #' @param fit
 #' @param pattern

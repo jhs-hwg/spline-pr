@@ -3,10 +3,6 @@
 
 # spline-pr
 
-<!-- id: a0217837100 -->
-<!-- amanda: a0217837101 -->
-<!-- group: 3372 -->
-
 The goal of spline-pr is to fit poisson regression models with
 generalized estimating equations (i.e., robust variance estimators for
 prevalence ratios) that include spline terms. The code in this repo also
@@ -23,12 +19,15 @@ use. Also, since this is not a ‘survey’ tutorial, we do not engage with
 the NHANES survey weights.
 
 ``` r
+
 library(table.glue)
+#> Warning: package 'table.glue' was built under R version 4.0.5
 library(tidyverse)
 library(splines)
 library(geepack)
+#> Warning: package 'geepack' was built under R version 4.0.5
 library(mice)
-#> Warning: package 'mice' was built under R version 4.1.1
+#> Warning: package 'mice' was built under R version 4.0.3
 
 source("R/functions.R")
 
@@ -61,6 +60,7 @@ multiple imputation and pool our spline estimates from each imputed
 dataset.
 
 ``` r
+
 n_imputes <- 5
 
 data_nhanes_impute <- data_nhanes %>% 
@@ -87,7 +87,7 @@ data_nhanes_impute[[1]]
 #>  7    72        160         71.3
 #>  8    80        109.        53.3
 #>  9    43        140         82.7
-#> 10    65        139.        59.3
+#> 10    65        157.        98  
 #> # ... with 4,786 more rows
 ```
 
@@ -95,9 +95,10 @@ data_nhanes_impute[[1]]
 
 Let’s not forget that our outcome is dependent on the two blood pressure
 variables; i.e., blood pressure control is 1 if systolic blood pressure
-is &lt; 140 mm Hg and diastolic blood pressure is &lt; 90 mm Hg. .
+is \< 140 mm Hg and diastolic blood pressure is \< 90 mm Hg. .
 
 ``` r
+
 data_nhanes_impute <- data_nhanes_impute %>% 
  map(
   ~ .x %>% 
@@ -123,7 +124,7 @@ data_nhanes_impute[[1]]
 #>  7    72        160         71.3          0
 #>  8    80        109.        53.3          1
 #>  9    43        140         82.7          0
-#> 10    65        139.        59.3          1
+#> 10    65        157.        98            0
 #> # ... with 4,786 more rows
 ```
 
@@ -132,6 +133,7 @@ data_nhanes_impute[[1]]
 Next we fit a `geeglm` model to each imputed dataset. Note that
 
 ``` r
+
 fits <- map(
   .x = data_nhanes_impute,
   .f = ~ geeglm(bp_control ~ ns(age, df = 4), 
@@ -146,11 +148,11 @@ summary(fits[[1]])
 #> 
 #>  Coefficients:
 #>                  Estimate  Std.err    Wald Pr(>|W|)    
-#> (Intercept)       0.69718  0.06510 114.690   <2e-16 ***
-#> ns(age, df = 4)1 -0.04489  0.05971   0.565   0.4522    
-#> ns(age, df = 4)2 -0.09171  0.05572   2.709   0.0998 .  
-#> ns(age, df = 4)3 -0.14803  0.14701   1.014   0.3140    
-#> ns(age, df = 4)4 -0.25158  0.02652  90.018   <2e-16 ***
+#> (Intercept)       0.68503  0.06515 110.561   <2e-16 ***
+#> ns(age, df = 4)1 -0.04122  0.05985   0.474    0.491    
+#> ns(age, df = 4)2 -0.08869  0.05577   2.529    0.112    
+#> ns(age, df = 4)3 -0.11569  0.14698   0.619    0.431    
+#> ns(age, df = 4)4 -0.23617  0.02659  78.865   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
@@ -158,13 +160,14 @@ summary(fits[[1]])
 #> Estimated Scale Parameters:
 #> 
 #>             Estimate  Std.err
-#> (Intercept)   0.2268 0.002057
+#> (Intercept)    0.228 0.002007
 #> Number of clusters:   4796  Maximum cluster size: 1
 ```
 
 ## Spline pooling
 
 ``` r
+
 # determine a spline basis function
 # the terms used here must match those in geeglm()
 bases <- map(
@@ -210,24 +213,25 @@ spline_pool <- tibble(
 
 spline_pool
 #> # A tibble: 1,000 x 5
-#>        x     pred     se ci_lwr ci_upr
-#>    <dbl>    <dbl>  <dbl>  <dbl>  <dbl>
-#>  1  20   -0.00480 0.0773 -0.156  0.147
-#>  2  20.1 -0.00472 0.0770 -0.156  0.146
-#>  3  20.1 -0.00464 0.0768 -0.155  0.146
-#>  4  20.2 -0.00456 0.0766 -0.155  0.146
-#>  5  20.2 -0.00448 0.0764 -0.154  0.145
-#>  6  20.3 -0.00440 0.0762 -0.154  0.145
-#>  7  20.4 -0.00431 0.0760 -0.153  0.145
-#>  8  20.4 -0.00423 0.0757 -0.153  0.144
-#>  9  20.5 -0.00415 0.0755 -0.152  0.144
-#> 10  20.5 -0.00407 0.0753 -0.152  0.144
+#>        x    pred     se ci_lwr ci_upr
+#>    <dbl>   <dbl>  <dbl>  <dbl>  <dbl>
+#>  1  20   -0.0108 0.0761 -0.160  0.138
+#>  2  20.1 -0.0107 0.0759 -0.160  0.138
+#>  3  20.1 -0.0107 0.0757 -0.159  0.138
+#>  4  20.2 -0.0106 0.0755 -0.159  0.137
+#>  5  20.2 -0.0105 0.0753 -0.158  0.137
+#>  6  20.3 -0.0104 0.0751 -0.158  0.137
+#>  7  20.4 -0.0103 0.0749 -0.157  0.136
+#>  8  20.4 -0.0102 0.0746 -0.156  0.136
+#>  9  20.5 -0.0101 0.0744 -0.156  0.136
+#> 10  20.5 -0.0100 0.0742 -0.155  0.135
 #> # ... with 990 more rows
 ```
 
 ## Spline visualization
 
 ``` r
+
 data_imputed_stack <- bind_rows(data_nhanes_impute)
 
 data_segment <- bin_segments(x = data_imputed_stack$age,

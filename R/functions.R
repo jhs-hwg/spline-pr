@@ -31,15 +31,17 @@ bin_segments <- function(x,
 
   if(!by_y){
 
-    freqs <- table(cut(x, bins))
-    freqs <- 0.1 * freqs / max(freqs)
+    freqs_orig <- table(cut(x, bins))
+
+    freqs <- 0.1 * freqs_orig / max(freqs_orig)
 
     return(
       data.frame(
         x = bins[-(bin_count + 1)],
         y = bin_yintercept,
         xend = bins[-(bin_count + 1)],
-        yend = as.numeric(bin_length * freqs + bin_yintercept)
+        yend = as.numeric(bin_length * freqs + bin_yintercept),
+        count = as.numeric(freqs)
       )
     )
 
@@ -62,6 +64,9 @@ bin_segments <- function(x,
 
   maxf <- max(f0, f1)
 
+  freqs_below <- f0
+  freqs_above <- f1
+
   f0	<- (0.1 * f0) / maxf
   f1	<- (0.1 * f1) / maxf
 
@@ -70,7 +75,8 @@ bin_segments <- function(x,
     y = bin_yintercept,
     xend = bins0,
     yend = as.numeric(-1 * bin_length * f0 + bin_yintercept),
-    event_status = 0
+    event_status = 0,
+    count = as.numeric(freqs_below)
   )
 
   data_segments_above <- data.frame(
@@ -78,7 +84,8 @@ bin_segments <- function(x,
     y = bin_yintercept,
     xend = bins1,
     yend = as.numeric(bin_length * f1 + bin_yintercept),
-    event_status = 1
+    event_status = 1,
+    count = as.numeric(freqs_above)
   )
 
   rbind(data_segments_above, data_segments_below)

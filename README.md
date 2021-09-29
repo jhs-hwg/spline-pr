@@ -24,7 +24,6 @@ library(tidyverse)
 library(splines)
 library(geepack)
 library(mice)
-#> Warning: package 'mice' was built under R version 4.1.1
 
 source("R/functions.R")
 
@@ -83,7 +82,7 @@ data_nhanes_impute[[1]]
 #>  7    72        160         71.3
 #>  8    80        109.        53.3
 #>  9    43        140         82.7
-#> 10    65        129.        70  
+#> 10    65        133.        74.7
 #> # ... with 4,786 more rows
 ```
 
@@ -119,7 +118,7 @@ data_nhanes_impute[[1]]
 #>  7    72        160         71.3          0
 #>  8    80        109.        53.3          1
 #>  9    43        140         82.7          0
-#> 10    65        129.        70            1
+#> 10    65        133.        74.7          1
 #> # ... with 4,786 more rows
 ```
 
@@ -142,19 +141,19 @@ summary(fits[[1]])
 #> 
 #>  Coefficients:
 #>                  Estimate  Std.err    Wald Pr(>|W|)    
-#> (Intercept)       0.71366  0.06423 123.436   <2e-16 ***
-#> ns(age, df = 4)1 -0.05684  0.05902   0.927   0.3356    
-#> ns(age, df = 4)2 -0.10526  0.05518   3.638   0.0565 .  
-#> ns(age, df = 4)3 -0.17352  0.14514   1.429   0.2319    
-#> ns(age, df = 4)4 -0.22690  0.02652  73.193   <2e-16 ***
+#> (Intercept)       0.70057  0.06461 117.586   <2e-16 ***
+#> ns(age, df = 4)1 -0.04516  0.05940   0.578   0.4471    
+#> ns(age, df = 4)2 -0.09499  0.05541   2.939   0.0865 .  
+#> ns(age, df = 4)3 -0.17385  0.14585   1.421   0.2332    
+#> ns(age, df = 4)4 -0.25360  0.02658  91.038   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 #> 
 #> Correlation structure = independence 
 #> Estimated Scale Parameters:
 #> 
-#>             Estimate Std.err
-#> (Intercept)    0.227 0.00205
+#>             Estimate  Std.err
+#> (Intercept)   0.2276 0.002028
 #> Number of clusters:   4796  Maximum cluster size: 1
 ```
 
@@ -206,18 +205,18 @@ spline_pool <- tibble(
 
 spline_pool
 #> # A tibble: 1,000 x 5
-#>        x    pred     se ci_lwr ci_upr
-#>    <dbl>   <dbl>  <dbl>  <dbl>  <dbl>
-#>  1  20   0.00278 0.0805 -0.155  0.160
-#>  2  20.1 0.00283 0.0802 -0.154  0.160
-#>  3  20.1 0.00289 0.0800 -0.154  0.160
-#>  4  20.2 0.00294 0.0798 -0.153  0.159
-#>  5  20.2 0.00300 0.0796 -0.153  0.159
-#>  6  20.3 0.00306 0.0793 -0.152  0.159
-#>  7  20.4 0.00311 0.0791 -0.152  0.158
-#>  8  20.4 0.00317 0.0789 -0.151  0.158
-#>  9  20.5 0.00322 0.0787 -0.151  0.157
-#> 10  20.5 0.00328 0.0784 -0.150  0.157
+#>        x     pred     se ci_lwr ci_upr
+#>    <dbl>    <dbl>  <dbl>  <dbl>  <dbl>
+#>  1  20   0.000447 0.0761 -0.149  0.150
+#>  2  20.1 0.000504 0.0759 -0.148  0.149
+#>  3  20.1 0.000561 0.0757 -0.148  0.149
+#>  4  20.2 0.000618 0.0755 -0.147  0.149
+#>  5  20.2 0.000675 0.0753 -0.147  0.148
+#>  6  20.3 0.000732 0.0750 -0.146  0.148
+#>  7  20.4 0.000789 0.0748 -0.146  0.147
+#>  8  20.4 0.000846 0.0746 -0.145  0.147
+#>  9  20.5 0.000903 0.0744 -0.145  0.147
+#> 10  20.5 0.000960 0.0742 -0.144  0.146
 #> # ... with 990 more rows
 ```
 
@@ -231,38 +230,49 @@ data_segment <- bin_segments(x = data_imputed_stack$age,
                              x_min = 20,
                              x_max = 80,
                              by_y = TRUE,
-                             bin_length = 1,
-                             bin_count = 60,
+                             bin_length = 2/3,
+                             bin_count = 15,
                              bin_yintercept = 2/3) %>%
   mutate(event_status = factor(event_status,
                                levels = c(1, 0),
                                labels = c("Yes", "No")))
 
+# you might need to tune this based on the range of your figure.
+nudge_y <- (as.numeric(data_segment$event_status=='Yes')-1/2)*0.01
 
 fig <- ggplot(spline_pool) + 
- aes(x = x, 
-     y = exp(pred), 
-     ymin = exp(ci_lwr), 
-     ymax = exp(ci_upr)) + 
- labs(x = 'age, years',
-      y = 'Prevalence ratio',
-      color = 'Blood pressure control') + 
- geom_line() + 
- geom_ribbon(alpha = 0.2) + 
- scale_y_log10() + 
- geom_segment(data = data_segment, 
-              inherit.aes = FALSE,
-              size = 2,
-              mapping = aes(x = x, 
-                            y = y,
-                            color = event_status,
-                            xend = xend, 
-                            yend = yend)) + 
- theme_bw() + 
- geom_hline(yintercept = 1, linetype = 2, color = 'grey') + 
- theme(panel.grid = element_blank(),
-       legend.position = c(.2, 0.42)) + 
- scale_color_manual(values = c("grey", "black"))
+  aes(x = x, 
+      y = exp(pred), 
+      ymin = exp(ci_lwr), 
+      ymax = exp(ci_upr)) + 
+  labs(x = 'age, years',
+       y = 'Prevalence ratio',
+       color = 'Blood pressure control') + 
+  geom_line() + 
+  geom_ribbon(alpha = 0.2) + 
+  scale_y_log10() + 
+  geom_segment(data = data_segment, 
+               inherit.aes = FALSE,
+               size = 12,
+               mapping = aes(x = x, 
+                             y = y,
+                             color = event_status,
+                             xend = xend, 
+                             yend = yend)) + 
+  geom_text(data = data_segment,
+             inherit.aes = FALSE,
+             show.legend = FALSE,
+             nudge_y = nudge_y,
+             mapping = aes(x = x, 
+                           y = yend,
+                           vjust = as.numeric(event_status=='No'),
+                           color = event_status,
+                           label = count)) +
+  theme_bw() + 
+  geom_hline(yintercept = 1, linetype = 2, color = 'grey') + 
+  theme(panel.grid = element_blank(),
+        legend.position = c(.2, 0.42)) + 
+  scale_color_manual(values = c("grey", "black"))
 
 fig
 ```

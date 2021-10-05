@@ -94,6 +94,7 @@ fits <- map(
   .x = data_nhanes_impute,
   .f = ~ geeglm(bp_control ~ ns(age, df = 4), 
                 data = .x, 
+                family = 'poisson',
                 id = seq(nrow(.x)))
 )
 
@@ -165,7 +166,7 @@ data_segment <- bin_segments(x = data_imputed_stack$age,
                              by_y = TRUE,
                              bin_length = 2/3,
                              bin_count = 15,
-                             bin_yintercept = 2/3) %>%
+                             bin_yintercept = 0.45) %>%
   mutate(event_status = factor(event_status,
                                levels = c(1, 0),
                                labels = c("Yes", "No")))
@@ -183,7 +184,7 @@ fig <- ggplot(spline_pool) +
        color = 'Blood pressure control') + 
   geom_line() + 
   geom_ribbon(alpha = 0.2) + 
-  scale_y_log10() + 
+  scale_y_log10(limits = c(0.35, 2.5)) + 
   geom_segment(data = data_segment, 
                inherit.aes = FALSE,
                size = 12,
@@ -204,7 +205,7 @@ fig <- ggplot(spline_pool) +
   theme_bw() + 
   geom_hline(yintercept = 1, linetype = 2, color = 'grey') + 
   theme(panel.grid = element_blank(),
-        legend.position = c(.2, 0.42)) + 
+        legend.position = c(.25, 0.80)) + 
   scale_color_manual(values = c("grey", "black"))
 
 fig
